@@ -52,8 +52,10 @@ public class FileController {
 
     @PostMapping("/share")
     public ResponseEntity<?> share(@RequestParam UUID fileId,
-                                   @RequestParam UUID userId){
-        String token=fileService.generateToken(fileId,userId);
+                                   @RequestParam UUID userId,
+                                   @RequestParam(required = false)Integer minutes,
+                                   @RequestParam(required = false)Integer downloadLimit){
+        String token=fileService.generateToken(fileId,userId,minutes,downloadLimit);
         return ResponseEntity.ok("/download/"+token);
     }
 
@@ -64,6 +66,8 @@ public class FileController {
             FileMetaData fileMetaData=fileService.getFileByToken(token);
 
             InputStream stream=minioService.getFile(fileMetaData.getPath());
+
+            fileService.cleanupIfExhausted(token, fileMetaData);
 
             return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"" + fileMetaData.getFileName() + "\"")
                 .body(new InputStreamResource(stream));

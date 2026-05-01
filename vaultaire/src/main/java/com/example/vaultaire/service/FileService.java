@@ -37,7 +37,7 @@ public class FileService {
 //        String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator;
 //        new File(uploadDir).mkdirs();
 
-        String objectName= UUID.randomUUID()+"_"+file.getOriginalFilename();
+        String objectName= UUID.randomUUID().toString();
         try{
             minioService.uploadFile(file,objectName);
         }catch (Exception e){
@@ -59,8 +59,6 @@ public class FileService {
 
         meta.setUser(user);
 
-        meta.setPath(objectName);
-
         return fileRepository.save(meta);
 
     }
@@ -69,7 +67,7 @@ public class FileService {
         return fileRepository.findById(id).orElseThrow(()-> new RuntimeException("File not found"));
     }
 
-    public String generateToken(UUID fileId,UUID userId){
+    public String generateToken(UUID fileId,UUID userId, Integer minutes, Integer downloadLimit){
         FileMetaData file=fileRepository.findById(fileId).
                 orElseThrow(()->new RuntimeException("File not found"));
 
@@ -84,6 +82,11 @@ public class FileService {
         share.setToken(token);
         share.setFile(file);
 
+        int ttl=(minutes !=null)?minutes:10;
+        share.setExpiryTime(LocalDateTime.now().plusMinutes(ttl));
+
+        share.setDownloadLimit(downloadLimit!=null ? downloadLimit : 0);
+        share.setDownloadCount(0);
         tokenRepository.save(share);
 
         return token;
@@ -92,6 +95,48 @@ public class FileService {
     public FileMetaData getFileByToken(String token){
         ShareToken share=tokenRepository.findByToken(token).orElseThrow(()->new RuntimeException("Invalid token"));
 
-        return share.getFile();
+        FileMetaData file=share.getFile();
+
+        if(share.getExpiryTime()!=null &&
+        share.getExpiryTime().isBefore(LocalDateTime.now())){
+            tokenRepository.delete(share);
+
+            boolean hasOtherTokens=tokenRepository.existsByFile(file);
+
+            if(!hasOtherTokens){
+                minioService.deleteFile(file.getPath());
+                fileRepository.delete(file);
+            }
+            throw new RuntimeException("Token expired");
+        }
+
+        if(share.getDownloadLimit() != null && share.getDownloadLimit()>0){
+            if(share.getDownloadCount()>=share.getDownloadLimit()){
+                throw new RuntimeException("Download limit reached");
+            }
+        }
+
+        share.setDownloadCount(share.getDownloadCount()+1);
+
+        tokenRepository.save(share);
+
+
+
+        return file;
+    }
+    public void cleanupIfExhausted(String token, FileMetaData file) {
+        tokenRepository.findByToken(token).ifPresent(share -> {
+            boolean exhausted = share.getDownloadLimit() != null
+                    && share.getDownloadLimit() > 0
+                    && share.getDownloadCount() >= share.getDownloadLimit();
+
+            if (exhausted) {
+                tokenRepository.delete(share);
+                if (!tokenRepository.existsByFile(file)) {
+                    minioService.deleteFile(file.getPath());
+                    fileRepository.delete(file);
+                }
+            }
+        });
     }
 }

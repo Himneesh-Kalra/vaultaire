@@ -58,4 +58,16 @@ public class FileMetaData {
     @ManyToOne
     @JoinColumn(name="user_id")
     private User user;
+
+    public String getPath() {
+        return path;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

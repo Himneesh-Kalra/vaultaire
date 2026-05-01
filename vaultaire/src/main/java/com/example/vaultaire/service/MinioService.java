@@ -3,6 +3,7 @@ package com.example.vaultaire.service;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +19,19 @@ public class MinioService {
                 .endpoint("http://localhost:9000")
                 .credentials("minio", "minio123")
                 .build();
+    }
+
+    public void deleteFile(String objectName) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket("vaultaire")
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete file from MinIO");
+        }
     }
 
     public String uploadFile(MultipartFile file,String objectName)throws Exception{
