@@ -7,25 +7,64 @@ services:
     environment:
       POSTGRES_DB: vaultaire
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: admin123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vault-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d vaultaire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest
     container_name: minio
     ports:
-      - "9000:9000"   # API
-      - "9001:9001"   # Console UI
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minio
+      MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minio123
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
+    networks:
+      - vault-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: springboot-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/vaultaire
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: vaultaire
+    networks:
+      - vault-network
 
 volumes:
   postgres_data:
   minio_data:
+
+networks:
+  vault-network:
+    driver: bridge
