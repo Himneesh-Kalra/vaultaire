@@ -1,0 +1,48 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: postgres
+    plan: free
+    env:
+      POSTGRES_DB: vaultaire
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+
+  # MinIO Storage
+  - type: private
+    name: minio
+    plan: free
+    dockerImage: minio/minio:latest
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: minioadmin
+      - key: MINIO_ROOT_PASSWORD
+        value: minio123
+    command: server /data --console-address ":9001"
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 1
+
+  # Spring Boot Application
+  - type: web
+    name: vaultaire-backend
+    plan: free
+    dockerfilePath: ./vaultaire/Dockerfile   # ← CHANGE THIS LINE
+    envVars:
+      - key: POSTGRES_URL
+        value: jdbc:postgresql://postgres:5432/vaultaire
+      - key: POSTGRES_USER
+        value: admin
+      - key: POSTGRES_PASSWORD
+        value: admin123
+      - key: MINIO_URL
+        value: http://minio:9000
+      - key: MINIO_ACCESS_KEY
+        value: minioadmin
+      - key: MINIO_SECRET_KEY
+        value: minio123
+      - key: MINIO_BUCKET
+        value: vaultaire
+      - key: SHOW_SQL
+        value: false
