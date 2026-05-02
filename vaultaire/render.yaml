@@ -28,7 +28,7 @@ services:
   - type: web
     name: vaultaire-backend
     plan: free
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./vaultaire/Dockerfile   # ← CHANGE THIS LINE
     envVars:
       - key: POSTGRES_URL
         value: jdbc:postgresql://postgres:5432/vaultaire
