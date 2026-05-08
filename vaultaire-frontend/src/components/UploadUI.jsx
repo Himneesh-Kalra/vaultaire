@@ -4,6 +4,7 @@ import "./UploadUI.css";
 function UploadUI({ projectName, userId }) {
     const fileRef = useRef();
     const dragCounter = useRef(0);
+    const API_URL = import.meta.env.VITE_API_URL;
 
     const [file, setFile] = useState(null);
     const [dragging, setDragging] = useState(false);
@@ -137,7 +138,7 @@ function UploadUI({ projectName, userId }) {
         formData.append("userId", userId);
 
         try {
-            const response = await fetch("http://localhost:8080/upload", {
+            const response = await fetch(`${API_URL}/upload`, {
                 method: "POST",
                 body: formData,
             });
@@ -185,7 +186,7 @@ function UploadUI({ projectName, userId }) {
 
             console.log("Sending share request:", { fileId, userId, timeLimit, downloadLimit });
 
-            const response = await fetch("http://localhost:8080/share", {
+            const response = await fetch(`${API_URL}/share`, {
                 method: "POST",
                 body: formData,
             });
@@ -211,7 +212,7 @@ function UploadUI({ projectName, userId }) {
             // Extract token from response (assuming response is like "/download/token123")
             const token = responseText.replace("/download/", "").trim();
             setShareToken(token);
-            const fullDownloadUrl = `http://localhost:8080${responseText}`;
+            const fullDownloadUrl = `${API_URL}${responseText}`;
             setGeneratedLink(fullDownloadUrl);
 
         } catch (error) {
@@ -245,7 +246,7 @@ function UploadUI({ projectName, userId }) {
         if (!shareToken) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/download/${shareToken}`, {
+            const response = await fetch(`${API_URL}/download/${shareToken}`, {
                 method: 'HEAD', // Just check headers, don't download the file
             });
 

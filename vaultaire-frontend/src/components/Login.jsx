@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 
 function Login({ onLogin, switchToRegister }) {
     const [formData, setFormData] = useState({
@@ -17,59 +17,56 @@ function Login({ onLogin, switchToRegister }) {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setErrors({});
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
 
-        try {
-            // Send as URLSearchParams (form data) instead of JSON
-            const formParams = new URLSearchParams();
-            formParams.append('email', formData.email);
-            formParams.append('password', formData.password);
+    try {
+        const API_URL = import.meta.env.VITE_API_URL;
 
-            const response = await fetch('http://localhost:8080/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',  // Changed from application/json
-                },
-                body: formParams  // Send as form data, not JSON
-            });
+        const formParams = new URLSearchParams();
+        formParams.append('email', formData.email);
+        formParams.append('password', formData.password);
 
-            // Check if response is ok
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Login failed');
-            }
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formParams
+        });
 
-            const responseText = await response.text();
-            console.log('Login response:', responseText);
-
-            // Extract user ID from response text
-            // Response format: "Login Successful: {userId}"
-            const userIdMatch = responseText.match(/Login Successful: (.+)$/);
-            const userId = userIdMatch ? userIdMatch[1] : null;
-
-            if (userId) {
-                // Store user data
-                localStorage.setItem('userId', userId);
-                localStorage.setItem('userEmail', formData.email);
-
-                if (onLogin) {
-                    onLogin({
-                        userId: userId,
-                        email: formData.email
-                    });
-                }
-            } else {
-                throw new Error('Could not extract user ID from response');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            setErrors({ general: error.message });
-        } finally {
-            setLoading(false);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Login failed');
         }
-    };
+
+        const responseText = await response.text();
+        console.log('Login response:', responseText);
+
+        const userIdMatch = responseText.match(/Login Successful: (.+)$/);
+        const userId = userIdMatch ? userIdMatch[1] : null;
+
+        if (userId) {
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userEmail', formData.email);
+
+            if (onLogin) {
+                onLogin({
+                    userId: userId,
+                    email: formData.email
+                });
+            }
+        } else {
+            throw new Error('Could not extract user ID from response');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        setErrors({ general: error.message });
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="container">

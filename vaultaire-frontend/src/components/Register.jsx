@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 
 function Register({ onRegister, switchToLogin }) {
     const [formData, setFormData] = useState({
@@ -41,76 +41,79 @@ function Register({ onRegister, switchToLogin }) {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!validateForm()) return;
+    if (!validateForm()) return;
 
-        setLoading(true);
-        setErrors({});
+    setLoading(true);
+    setErrors({});
 
-        try {
-            // Send as URLSearchParams (form data)
-            const formParams = new URLSearchParams();
-            formParams.append('email', formData.email);
-            formParams.append('password', formData.password);
+    try {
+        const API_URL = import.meta.env.VITE_API_URL;
 
-            const response = await fetch('http://localhost:8080/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formParams
-            });
+        // Send as URLSearchParams (form data)
+        const formParams = new URLSearchParams();
+        formParams.append('email', formData.email);
+        formParams.append('password', formData.password);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Registration failed');
-            }
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formParams
+        });
 
-            const responseText = await response.text();
-            console.log('Registration response:', responseText);
-
-            // After successful registration, auto-login
-            const loginParams = new URLSearchParams();
-            loginParams.append('email', formData.email);
-            loginParams.append('password', formData.password);
-
-            const loginResponse = await fetch('http://localhost:8080/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: loginParams
-            });
-
-            if (!loginResponse.ok) {
-                throw new Error('Auto-login failed');
-            }
-
-            const loginText = await loginResponse.text();
-            const userIdMatch = loginText.match(/Login Successful: (.+)$/);
-            const userId = userIdMatch ? userIdMatch[1] : null;
-
-            if (userId) {
-                localStorage.setItem('userId', userId);
-                localStorage.setItem('userEmail', formData.email);
-
-                if (onRegister) {
-                    onRegister({
-                        userId: userId,
-                        email: formData.email
-                    });
-                }
-            } else {
-                throw new Error('Could not extract user ID');
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            setErrors({ general: error.message });
-        } finally {
-            setLoading(false);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Registration failed');
         }
-    };
+
+        const responseText = await response.text();
+        console.log('Registration response:', responseText);
+
+        // After successful registration, auto-login
+        const loginParams = new URLSearchParams();
+        loginParams.append('email', formData.email);
+        loginParams.append('password', formData.password);
+
+        const loginResponse = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: loginParams
+        });
+
+        if (!loginResponse.ok) {
+            throw new Error('Auto-login failed');
+        }
+
+        const loginText = await loginResponse.text();
+        const userIdMatch = loginText.match(/Login Successful: (.+)$/);
+        const userId = userIdMatch ? userIdMatch[1] : null;
+
+        if (userId) {
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userEmail', formData.email);
+
+            if (onRegister) {
+                onRegister({
+                    userId: userId,
+                    email: formData.email
+                });
+            }
+        } else {
+            throw new Error('Could not extract user ID');
+        }
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        setErrors({ general: error.message });
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="container">
