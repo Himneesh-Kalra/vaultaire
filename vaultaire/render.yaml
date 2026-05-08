@@ -2,19 +2,20 @@ services:
   - type: web
     name: vaultaire
     plan: free
-    dockerComposePath: ./docker-compose.yml
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://postgres:5432/vaultaire
+        sync: false
       - key: SPRING_DATASOURCE_USERNAME
-        value: admin
+        sync: false
       - key: SPRING_DATASOURCE_PASSWORD
-        value: admin123
+        sync: false
       - key: MINIO_URL
-        value: http://minio:9000
+        sync: false
       - key: MINIO_ACCESS_KEY
-        value: minioadmin
+        sync: false
       - key: MINIO_SECRET_KEY
-        value: minio123
+        sync: false
       - key: MINIO_BUCKET
         value: vaultaire
