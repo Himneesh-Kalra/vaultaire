@@ -614,12 +614,7 @@ function UploadUI({ projectName, userId }) {
                             Share this link with anyone. The link will expire after {timeLimit} minute{timeLimit !== 1 ? 's' : ''} or after {downloadLimit} download{downloadLimit !== 1 ? 's' : ''}.
                         </p>
 
-                        <button
-                            onClick={testDownloadLink}
-                            style={{ marginRight: '10px', background: '#6c757d' }}
-                        >
-                            Test Link Status
-                        </button>
+                        
 
                         <button
                             onClick={handleReset}
