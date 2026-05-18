@@ -9,6 +9,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,7 +70,10 @@ public class FileController {
 
             fileService.cleanupIfExhausted(token, fileMetaData);
 
-            return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"" + fileMetaData.getFileName() + "\"")
+            return ResponseEntity.ok().contentType(
+                            MediaType.parseMediaType(fileMetaData.getContentType())
+                    ).header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + fileMetaData.getFileName() + "\"")
                 .body(new InputStreamResource(stream));
 
         }catch (Exception e){

@@ -12,11 +12,20 @@ public class FileMetaData {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(name = "content_type")
+    private String contentType;
 
     private String fileName;
     private String path;
     private long size;
 
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
 
     private LocalDateTime uploadTime;
 

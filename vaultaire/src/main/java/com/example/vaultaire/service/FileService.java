@@ -56,6 +56,13 @@ public class FileService {
         meta.setPath(objectName);
         meta.setSize(file.getSize());
         meta.setUploadTime(LocalDateTime.now());
+        meta.setContentType(file.getContentType());
+
+        meta.setContentType(
+                file.getContentType() != null
+                        ? file.getContentType()
+                        : "application/octet-stream"
+        );
 
         meta.setUser(user);
 
